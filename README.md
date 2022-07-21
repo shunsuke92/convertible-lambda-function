@@ -1,3 +1,3 @@
-# brueghel-lambda-function
+# convertible-lambda-function
 
-This is a Lambda function designed for Brueghel
+This is a Lambda function designed for Convertible
