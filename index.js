@@ -1,20 +1,18 @@
 exports.handler = async (event) => {
   // モジュールの読み込み
-  const sharp = require("sharp");
+  const sharp = require('sharp');
 
-  // Base64からBufferに変換
+  // Base64をBufferに変換
   const imageBase64 = event.image;
-  const imageBuffer = Buffer.from(imageBase64, "base64");
+  let imageBuffer = Buffer.from(imageBase64, 'base64');
 
   // ===========================
-  //         変換処理
+  //          変換処理
   // ===========================
-  let outputImage = imageBuffer;
   let err = false;
   // リサイズ処理
   if (event.resize) {
-    console.log("リサイズ処理");
-    await sharp(outputImage)
+    await sharp(imageBuffer)
       .resize(event.width, event.height, {
         fit: event.fit,
         position: event.position,
@@ -22,7 +20,7 @@ exports.handler = async (event) => {
       })
       .toBuffer()
       .then((res) => {
-        outputImage = res;
+        imageBuffer = res;
       })
       .catch((error) => {
         console.log(error);
@@ -31,31 +29,28 @@ exports.handler = async (event) => {
   }
 
   // フォーマット変換
-  if (!(event.original && !event.optimization)) {
-    // 最適化
-    if (event.optimization) {
-      if (event.type === "jpeg") {
-        console.log("JPEGを最適化");
-        await sharp(outputImage)
-          .jpeg({ quality: 80 })
-          .toBuffer()
-          .then((res) => {
-            outputImage = res;
-          })
-          .catch((error) => {
-            console.log(error);
-            err = true;
-          });
-      }
+  if (!event.original || event.optimization) {
+    // JPEGを最適化
+    if (event.optimization && event.type === 'jpeg') {
+      await sharp(imageBuffer)
+        .jpeg({ quality: 80 })
+        .toBuffer()
+        .then((res) => {
+          imageBuffer = res;
+        })
+        .catch((error) => {
+          console.log(error);
+          err = true;
+        });
     }
+
     // JPEG変換
-    else if (event.format === "jpeg") {
-      console.log("JPEG変換");
-      await sharp(outputImage)
+    else if (event.format === 'jpeg') {
+      await sharp(imageBuffer)
         .jpeg({ quality: event.level })
         .toBuffer()
         .then((res) => {
-          outputImage = res;
+          imageBuffer = res;
         })
         .catch((error) => {
           console.log(error);
@@ -64,13 +59,12 @@ exports.handler = async (event) => {
     }
 
     // PNG変換
-    else if (event.format === "png" && event.type !== "png") {
-      console.log("PNG変換");
-      await sharp(outputImage)
+    else if (event.format === 'png' && event.type !== 'png') {
+      await sharp(imageBuffer)
         .png({ progressive: true })
         .toBuffer()
         .then((res) => {
-          outputImage = res;
+          imageBuffer = res;
         })
         .catch((error) => {
           console.log(error);
@@ -79,25 +73,24 @@ exports.handler = async (event) => {
     }
 
     // WebP変換
-    else if (event.format === "webp") {
-      console.log("WebP変換");
+    else if (event.format === 'webp') {
       if (event.lossless) {
-        await sharp(outputImage)
+        await sharp(imageBuffer)
           .webp({ lossless: true })
           .toBuffer()
           .then((res) => {
-            outputImage = res;
+            imageBuffer = res;
           })
           .catch((error) => {
             console.log(error);
             err = true;
           });
       } else {
-        await sharp(outputImage)
+        await sharp(imageBuffer)
           .webp({ quality: event.level })
           .toBuffer()
           .then((res) => {
-            outputImage = res;
+            imageBuffer = res;
           })
           .catch((error) => {
             console.log(error);
@@ -107,13 +100,12 @@ exports.handler = async (event) => {
     }
 
     // GIF変換
-    else if (event.format === "gif" && event.type !== "gif") {
-      console.log("GIF変換");
-      await sharp(outputImage)
+    else if (event.format === 'gif' && event.type !== 'gif') {
+      await sharp(imageBuffer)
         .gif()
         .toBuffer()
         .then((res) => {
-          outputImage = res;
+          imageBuffer = res;
         })
         .catch((error) => {
           console.log(error);
@@ -121,14 +113,13 @@ exports.handler = async (event) => {
         });
     }
 
-    // TIFF変換
+    // TIFF変換（未使用）
     /* else if(event.format === 'tiff') {
-        console.log('TIFF変換')
-        await sharp(outputImage)
+        await sharp(imageBuffer)
             .tiff( { quality : event.level } )
             .toBuffer()
             .then( res => {
-                outputImage = res;
+                imageBuffer = res;
             })
             .catch(error => {
               err = true;
@@ -136,26 +127,24 @@ exports.handler = async (event) => {
     } */
 
     // AVIF変換
-    else if (event.format === "avif") {
-      console.log("AVIF変換");
+    else if (event.format === 'avif') {
       if (event.lossless) {
-        await sharp(outputImage)
+        await sharp(imageBuffer)
           .avif({ lossless: true })
           .toBuffer()
           .then((res) => {
-            outputImage = res;
+            imageBuffer = res;
           })
           .catch((error) => {
             console.log(error);
             err = true;
           });
       } else {
-        await sharp(outputImage)
+        await sharp(imageBuffer)
           .avif({ quality: event.level })
-          // .avif()
           .toBuffer()
           .then((res) => {
-            outputImage = res;
+            imageBuffer = res;
           })
           .catch((error) => {
             console.log(error);
@@ -164,25 +153,24 @@ exports.handler = async (event) => {
       }
     }
 
-    // HEIF変換
+    // HEIF変換（未使用）
     /* else if (event.format === "heif") {
-      console.log("HEIF変換");
       if (event.lossless) {
-        await sharp(outputImage)
+        await sharp(imageBuffer)
           .heif({ lossless: true })
           .toBuffer()
           .then((res) => {
-            outputImage = res;
+            imageBuffer = res;
           })
           .catch((error) => {
             err = true;
           });
       } else {
-        await sharp(outputImage)
+        await sharp(imageBuffer)
           .heif({ quality: event.level })
           .toBuffer()
           .then((res) => {
-            outputImage = res;
+            imageBuffer = res;
           })
           .catch((error) => {
             err = true;
@@ -195,12 +183,12 @@ exports.handler = async (event) => {
     // レスポンス
     const response = {
       statusCode: 500,
-      errorMessage: "Error in conversion process",
+      errorMessage: 'Error in conversion process',
     };
     return response;
   } else {
     // BufferからBase64に変換
-    const responseImage = Buffer.from(outputImage).toString("base64");
+    const responseImage = Buffer.from(imageBuffer).toString('base64');
 
     // レスポンス
     const response = {
