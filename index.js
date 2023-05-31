@@ -1,4 +1,16 @@
 exports.handler = async (event) => {
+  // 認証
+  if (
+    event.password === undefined ||
+    event.password !== process.env.AWS_PASSWORD
+  ) {
+    const response = {
+      statusCode: 403,
+      errorMessage: 'Forbidden',
+    };
+    return response;
+  }
+
   // モジュールの読み込み
   const sharp = require('sharp');
 
@@ -179,22 +191,19 @@ exports.handler = async (event) => {
     } */
   }
 
+  // レスポンス
   if (err) {
-    // レスポンス
-    const response = {
+    return {
       statusCode: 500,
       errorMessage: 'Error in conversion process',
     };
-    return response;
   } else {
     // BufferからBase64に変換
     const responseImage = Buffer.from(imageBuffer).toString('base64');
 
-    // レスポンス
-    const response = {
+    return {
       statusCode: 200,
       body: JSON.stringify({ image: responseImage }),
     };
-    return response;
   }
 };
