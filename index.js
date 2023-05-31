@@ -29,7 +29,7 @@ exports.handler = async (event) => {
   }
 
   // フォーマット変換
-  if (!event.original || event.optimization) {
+  if (!(event.original && !event.optimization)) {
     // JPEGを最適化
     if (event.optimization && event.type === 'jpeg') {
       await sharp(imageBuffer)
